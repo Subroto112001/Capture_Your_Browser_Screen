@@ -1,0 +1,6 @@
+{
+  "name": "Website Screenshot Tool",
+  "description": "On-demand website screenshot generator and preview tool with SSRF protection, multiple device viewports, and zero storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

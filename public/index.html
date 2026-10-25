@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Website Screenshot Tool — Instant Webpage Capture</title>
+    <meta name="description" content="Capture high-resolution screenshots of any website with custom viewport sizes, full-page scrolling, and zero storage." />
+    <meta property="og:title" content="Website Screenshot Tool — Instant Webpage Capture" />
+    <meta property="og:description" content="Capture high-resolution screenshots of any website with custom viewport sizes, full-page scrolling, and zero storage." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <h1>Website Screenshot Tool</h1>
+            <p class="subtitle">On-demand web captures streamed directly to you. No accounts, no database, no storage.</p>
+          </div>
+        </div>
+        <div class="badge-ephemeral">
+          <span class="status-dot"></span>
+          <span>Zero-Storage &bull; Ephemeral</span>
+        </div>
+      </header>
+
+      <!-- Main Capture Form Card -->
+      <main class="main-card">
+        <form id="screenshot-form" novalidate>
+          <!-- URL Input Group -->
+          <div class="form-group">
+            <label for="url-input" class="form-label">
+              <span>Target Website URL</span>
+              <span class="label-hint">https:// will be prepended automatically</span>
+            </label>
+            <div class="input-with-icon">
+              <div class="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              </div>
+              <input
+                type="url"
+                id="url-input"
+                name="url"
+                placeholder="example.com or https://news.ycombinator.com"
+                required
+                autocomplete="off"
+                spellcheck="false"
+                aria-describedby="url-hint"
+              />
+              <button type="button" id="clear-btn" class="clear-input-btn" title="Clear input" aria-label="Clear URL input">
+                &times;
+              </button>
+            </div>
+            <!-- Quick Suggestion Chips -->
+            <div class="quick-chips" aria-label="Example websites">
+              <span class="chips-label">Try:</span>
+              <button type="button" class="chip-btn" data-url="https://news.ycombinator.com">Hacker News</button>
+              <button type="button" class="chip-btn" data-url="https://en.wikipedia.org/wiki/Aurora">Wikipedia</button>
+              <button type="button" class="chip-btn" data-url="https://github.com">GitHub</button>
+            </div>
+          </div>
+
+          <!-- Options Section -->
+          <div class="options-grid">
+            <!-- Device Preset -->
+            <div class="option-card">
+              <label class="option-title" id="device-label">Device Viewport</label>
+              <div class="segmented-control" role="radiogroup" aria-labelledby="device-label">
+                <label class="control-item">
+                  <input type="radio" name="device" value="desktop" checked />
+                  <span class="control-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    Desktop
+                    <small>1366&times;768</small>
+                  </span>
+                </label>
+                <label class="control-item">
+                  <input type="radio" name="device" value="laptop" />
+                  <span class="control-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+                    Laptop
+                    <small>1440&times;900</small>
+                  </span>
+                </label>
+                <label class="control-item">
+                  <input type="radio" name="device" value="tablet" />
+                  <span class="control-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    Tablet
+                    <small>768&times;1024</small>
+                  </span>
+                </label>
+                <label class="control-item">
+                  <input type="radio" name="device" value="mobile" />
+                  <span class="control-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    Mobile
+                    <small>390&times;844</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Settings Row: Full Page, Format, Delay -->
+            <div class="settings-row">
+              <!-- Full Page Toggle -->
+              <div class="toggle-card">
+                <div class="toggle-info">
+                  <label for="fullpage-toggle" class="toggle-label">Full Page Capture</label>
+                  <span class="toggle-subtext">Scrolls entire page (capped at 8000px)</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="fullpage-toggle" name="fullPage" />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <!-- Format Picker -->
+              <div class="select-card">
+                <label for="format-select" class="select-label">Output Format</label>
+                <select id="format-select" name="format">
+                  <option value="jpeg" selected>JPEG (Balanced, ~80% quality)</option>
+                  <option value="png">PNG (Lossless, sharp text)</option>
+                  <option value="webp">WebP (Modern compression)</option>
+                </select>
+              </div>
+
+              <!-- Delay Picker -->
+              <div class="select-card">
+                <label for="delay-select" class="select-label">Render Delay</label>
+                <select id="delay-select" name="delay">
+                  <option value="0" selected>0 seconds (Instant)</option>
+                  <option value="1">1 second (Let CSS settle)</option>
+                  <option value="2">2 seconds (Medium animations)</option>
+                  <option value="3">3 seconds (Heavy dynamic sites)</option>
+                  <option value="5">5 seconds (Max delay)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="action-bar">
+            <button type="submit" id="submit-btn" class="btn btn-primary">
+              <span class="btn-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </span>
+              <span class="btn-text">Take Screenshot</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Live Status Area (aria-live) -->
+        <div id="status-region" class="status-region" aria-live="polite" aria-atomic="true">
+          <div id="loading-state" class="loading-state hidden">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="loading-text-wrap">
+              <p class="loading-title">Capturing screenshot...</p>
+              <p class="loading-sub">This can take up to 40 seconds for complex sites and lazy-loaded media.</p>
+            </div>
+          </div>
+
+          <div id="error-card" class="error-card hidden" role="alert" aria-live="assertive">
+            <div class="error-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div class="error-content">
+              <p class="error-title" id="error-title">Capture Failed</p>
+              <p class="error-message" id="error-msg">Something went wrong.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Preview Section -->
+        <section id="result-section" class="result-section hidden" aria-labelledby="preview-heading">
+          <div class="result-header">
+            <div class="result-meta">
+              <h2 id="preview-heading" class="result-title">Captured Screenshot</h2>
+              <div class="meta-tags" id="meta-tags">
+                <span class="meta-tag" id="meta-url"></span>
+                <span class="meta-tag" id="meta-size"></span>
+                <span class="meta-tag" id="meta-format"></span>
+              </div>
+            </div>
+            <div class="result-actions">
+              <a id="download-btn" class="btn btn-download" download="screenshot.jpg">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Download</span>
+              </a>
+              <button type="button" id="copy-btn" class="btn btn-secondary" title="Copy to clipboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span id="copy-text">Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Browser Mockup Wrapper -->
+          <div class="browser-frame">
+            <div class="browser-topbar">
+              <div class="window-dots" aria-hidden="true">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <div class="browser-url-bar" id="browser-address">https://example.com</div>
+            </div>
+            <div class="preview-scroll-container">
+              <img id="preview-image" alt="Captured webpage screenshot preview" />
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <p>Built with Puppeteer &bull; Vercel Serverless &bull; SSRF Protected</p>
+      </footer>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
