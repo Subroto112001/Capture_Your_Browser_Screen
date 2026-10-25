@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "clean": "node -e \"const fs=require('node:fs'); for (const p of ['dist','server.js']) fs.rmSync(p,{recursive:true,force:true})\"",
     "lint": "tsc --noEmit",
-    "test:capture": "node test/capture.test.js"
+    "test:capture": "node test/capture.test.js",
+    "test:performance": "node test/performance.test.js"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

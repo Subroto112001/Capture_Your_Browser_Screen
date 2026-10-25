@@ -8,7 +8,7 @@ A fast, lightweight, and production-ready on-demand website screenshot service d
 - **Strict SSRF Defense**: Comprehensive pre-flight and runtime request-interception checks blocking loopback, link-local (AWS/GCP metadata `169.254.169.254`), private RFC1918 subnets, non-standard IP notations (hex/octal/dword), internal DNS names, and unsupported schemes.
 - **Multiple Device Viewports**: Desktop (1920×1080), Laptop (1440×900), Tablet (768×1024), and Mobile (390×844) with appropriate device pixel ratios and mobile user agents.
 - **Full-Page Capture**: Automated scrolling reveals lazy-loaded images, with captures capped at 16,000px.
-- **Adaptive Image Output**: Serverless images use a compression and scaling fallback under 4 MB; local captures support up to 30 MB.
+- **Adaptive Image Output**: Serverless images use a compression and scaling fallback under 4.4 MB; local captures support up to 30 MB.
 
 ---
 
@@ -94,7 +94,11 @@ On macOS/Linux, run `cp .env.example .env`, then `npm install` and `npm run dev`
 
 ## 3. Deploying to Vercel (Free Hobby Plan)
 
-Vercel selects the bundled Linux Chromium automatically. The project pins compatible Chromium/Puppeteer versions and uses Node.js 24.x. Do not set `CHROME_PATH` or `ALLOW_LOCAL_URLS` in Vercel project environment variables. For troubleshooting, you can temporarily set `SCREENSHOT_DEBUG=1` to include the launch error message in a 500 response; remove it after debugging. The function has a 60-second maximum duration configured in `vercel.json`.
+Vercel selects the bundled Linux Chromium automatically. The project pins compatible Chromium/Puppeteer versions and uses Node.js 24.x. Do not set `CHROME_PATH` or `ALLOW_LOCAL_URLS` in Vercel project environment variables. The screenshot function has a 120-second maximum duration and a 115-second hard watchdog. Its processing-time default is 100 seconds on serverless and 90 seconds locally; `SCREENSHOT_MAX_SECONDS` can change that cap, still clamped to 105 seconds (15 seconds below the function limit). Browser launch/cold start is measured separately and does not consume the page-processing budget.
+
+For slow targets, choose **Capture time limit** under Advanced options; the server clamps the requested 60/90/120 seconds to `SCREENSHOT_MAX_SECONDS` and the function safety margin. The default **Block common analytics trackers** setting skips known analytics endpoints while allowing site scripts, consent UI, fonts, images, video, and content CDNs. A 504 watchdog response is sent before the platform limit. Full-page requests can take close to two minutes; Cancel aborts the browser request from the client.
+
+Vercel deployments can be benchmarked against local results using `node scripts/benchmark.mjs https://www.example.com`. Set **Project Settings → Functions → Function Region** near the team or the sites you capture most often. Hobby has a single function region, so choose the closest practical location; no region is hard-coded in `vercel.json`.
 
 If Vercel's runtime detection needs an override, set `AWS_LAMBDA_JS_RUNTIME=nodejs24.x` in the project's environment variables. Leave `AWS_EXECUTION_ENV` unset so the function can provide its matching Lambda runtime marker automatically.
 
@@ -131,7 +135,7 @@ $env:TEST_WIX_URL = 'https://your-public-wix-site.example'
 npm run test:capture
 ```
 
-The Wix smoke run uses the 48-second capture deadline. Remove the environment variable after the test if you do not want later test runs to contact that site.
+The Wix smoke run uses the local capture budget. Remove the environment variable after the test if you do not want later test runs to contact that site.
 
 ## 5. Rate Limiting in Serverless Environments
 
@@ -156,8 +160,8 @@ To enforce a global, edge-level rate limit across all serverless instances:
 
 ## 6. Known Limitations on Vercel Hobby Plan
 
-1. **60-Second Maximum Execution Time**: Vercel's Hobby plan allows up to 60 seconds for this function. The handler keeps a 50-second watchdog; the capture pipeline targets a 48-second deadline, with an 8-second reserve for the screenshot itself.
-2. **Response Payload Limits**: Serverless captures are kept below 4 MB using JPEG quality 70 and 55, then clip scaling at 0.75 and 0.5 before returning `413`. Local/other-host captures allow up to 30 MB.
+1. **Function Duration**: `vercel.json` configures 120 seconds. A 115-second watchdog leaves time for a JSON response; page processing defaults to 100 seconds on serverless, with separate reserves for the final capture, size fallback, and response.
+2. **Response Payload Limits**: Serverless captures are kept below 4.4 MB by lowering JPEG quality to 75 then 65 before scaling to 0.75× or 0.5×. Local/other-host captures allow up to 30 MB.
 3. **Cold Starts**: Serverless instances shut down when idle. The first request after an idle period may take 2–5 seconds longer while the container initializes and extracts Chromium into `/tmp`.
 4. **Bot Detection & CAPTCHAs**: Sites protected by Cloudflare Under Attack mode, Akamai Bot Manager, or mandatory CAPTCHA challenges may render a verification screen rather than the target webpage content.
 5. **Vercel Hobby Terms**: Vercel's Hobby tier is designated for personal, non-commercial use.

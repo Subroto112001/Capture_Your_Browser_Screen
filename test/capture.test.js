@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launchBrowser } from '../lib/browser.js';
-import { capturePage } from '../lib/capture.js';
+import { capturePage, CAPTURE_CONFIG } from '../lib/capture.js';
 import { assertSafeUrl } from '../lib/validateUrl.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,8 @@ try {
     await page.setContent(await fs.readFile(path.join(fixtureDir, `${testCase.name}.html`), 'utf8'), { waitUntil: 'domcontentloaded' });
     const started = Date.now();
     const result = await capturePage(page, { fullPage: true, format: 'png', platform: 'generic', popupWait: testCase.popupWait });
+    assert.ok(result.timings.navigation >= 0 && result.timings.capture > 0, 'capture returns navigation/capture timings');
+    assert.ok(result.metrics.images.total >= 0 && result.metrics.images.pending >= 0, 'capture returns image counters');
     const dimensions = pngDimensions(result.buffer);
     assert.equal(dimensions.width, 1920, `${testCase.name} screenshot width`);
     assert.equal(await page.$eval('header', element => element.isConnected && getComputedStyle(element).display !== 'none'), true, `${testCase.name} header should remain visible`);
@@ -62,6 +64,25 @@ try {
     await page.close();
   }
 
+  const constrainedPage = await browser.newPage();
+  await constrainedPage.setViewport(viewport);
+  await constrainedPage.setContent(profileFixture, { waitUntil: 'domcontentloaded' });
+  const constrained = await capturePage(constrainedPage, { fullPage: true, format: 'png', platform: 'generic', popupWait: 0, deadline: Date.now() + 15000 });
+  assert.ok(constrained.degraded.length > 0, 'a deliberately short processing budget should report shortened phases');
+  await constrainedPage.close();
+
+  const throttledPage = await browser.newPage();
+  await throttledPage.setViewport(viewport);
+  await throttledPage.setContent(profileFixture, { waitUntil: 'domcontentloaded' });
+  const throttleSession = await throttledPage.createCDPSession();
+  await throttleSession.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  const throttledResult = await capturePage(throttledPage, { fullPage: true, format: 'png', platform: 'generic', popupWait: 0, deadline: Date.now() + 45000 });
+  assert.equal(throttledResult.height, 3240, 'CPU-throttled full-page capture keeps the full fixture height');
+  assert.equal(await throttledPage.$$eval('.section', elements => elements.every(element => element.classList.contains('visible'))), true, 'scroll-reveal content remains visible under CPU throttling');
+  console.info(`[test:capture] CPU throttle ×4: ${throttledResult.elapsedMs}ms, height=${throttledResult.height}, degraded=${throttledResult.degraded.join(',') || 'none'}`);
+  await throttleSession.detach();
+  await throttledPage.close();
+
   if (process.env.TEST_WIX_URL) {
     const dnsCache = new Map();
     const { url } = await assertSafeUrl(process.env.TEST_WIX_URL, dnsCache);
@@ -75,7 +96,7 @@ try {
       catch { return request.abort('accessdenied'); }
     });
     const started = Date.now();
-    const result = await capturePage(page, { url: url.href, fullPage: true, format: 'png', platform: 'auto', deadline: started + 48000 });
+    const result = await capturePage(page, { url: url.href, fullPage: true, format: 'png', platform: 'auto', deadline: started + CAPTURE_CONFIG.defaultLocalSeconds * 1000 });
     await fs.writeFile(path.join(outputDir, 'real-wix-smoke.png'), result.buffer);
     console.info(`[test:capture] TEST_WIX_URL: ${result.height}px, ${result.elapsedMs}ms, ${result.notes}`);
     await page.close();

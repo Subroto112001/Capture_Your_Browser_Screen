@@ -8,6 +8,7 @@ import type {ScreenshotResult} from '../types';
 interface ResultPanelProps {
   result: ScreenshotResult;
   onToast: (message: string, kind?: 'success' | 'info') => void;
+  onRetryLonger: () => void;
 }
 
 function formatBytes(bytes: number): string {
@@ -26,7 +27,7 @@ function getExtension(mimeType: string): string {
   return 'jpg';
 }
 
-export function ResultPanel({result, onToast}: ResultPanelProps) {
+export function ResultPanel({result, onToast, onRetryLonger}: ResultPanelProps) {
   const [dimensions, setDimensions] = useState<ScreenshotResult['dimensions']>(result.dimensions);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -93,7 +94,11 @@ export function ResultPanel({result, onToast}: ResultPanelProps) {
     setLightboxOpen(true);
   };
   const notes = result.notes;
+  const details = result.captureDetails;
   const popupCount = (notes.dismissed || 0) + (notes.hidden || 0);
+  const quality = Number(details?.q);
+  const scale = Number(details?.scale);
+  const optimized = (Number.isFinite(quality) && quality < 85) || (Number.isFinite(scale) && scale < 1);
   const deviceFrame = result.device === 'mobile' ? 'device-frame--mobile' : result.device === 'tablet' ? 'device-frame--tablet' : 'device-frame--desktop';
 
   return <>
@@ -111,6 +116,7 @@ export function ResultPanel({result, onToast}: ResultPanelProps) {
               {popupCount > 0 && <span className="result-badge">{popupCount} popup{popupCount === 1 ? '' : 's'} handled</span>}
               {notes.platform && <span className="result-badge">{notes.platform === 'wix' ? 'Wix' : 'Generic'} profile</span>}
               {notes.truncated && <span className="result-badge result-badge--warning">Truncated at 16,000px</span>}
+              {optimized && <span className="result-badge result-badge--warning">Optimized to fit size limit: JPEG {Number.isFinite(quality) ? `${quality}%` : '—'}, {Number.isFinite(scale) ? `${scale}×` : '1×'} scale</span>}
             </div>
           </div>
           <div className="result-actions">
@@ -119,6 +125,9 @@ export function ResultPanel({result, onToast}: ResultPanelProps) {
             <button className="result-action result-action--secondary" type="button" onClick={event => openLightbox(event.currentTarget)} aria-label="Open full-size screenshot" title="Open full size" disabled={!dimensions}><Expand size={17} /><span>Open full size</span></button>
           </div>
         </div>
+
+        {details && <details className="capture-details"><summary>Capture details</summary><dl>{Object.entries(details).map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value}</dd></div>)}</dl></details>}
+        {notes.degraded?.length ? <div className="capture-warning" role="status"><span>Capture was shortened to fit the time limit. Try a longer delay or retry.</span><button type="button" className="retry-button" onClick={onRetryLonger}>Retry with more time</button></div> : null}
 
         <div className={`device-frame ${deviceFrame}`}>
           {result.device === 'mobile' && <div className="phone-speaker" aria-hidden="true" />}

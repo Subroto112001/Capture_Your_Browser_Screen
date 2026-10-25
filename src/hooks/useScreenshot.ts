@@ -6,12 +6,23 @@ function readNotes(header: string | null): ScreenshotResult['notes'] {
   const dismissed = header.match(/popups-dismissed=(\d+)/)?.[1];
   const hidden = header.match(/popups-hidden=(\d+)/)?.[1];
   const platform = header.match(/platform=(wix|generic)/)?.[1];
+  const degraded = header.match(/degraded=([^;]+)/)?.[1];
   return {
     ...(dismissed ? {dismissed: Number(dismissed)} : {}),
     ...(hidden ? {hidden: Number(hidden)} : {}),
     ...(platform ? {platform: platform as 'wix' | 'generic'} : {}),
     ...(header.includes('truncated=true') ? {truncated: true} : {}),
+    ...(degraded && degraded !== 'none' ? {degraded: degraded.split(',')} : {}),
   };
+}
+
+function readTiming(header: string | null): Record<string, string> | undefined {
+  if (!header) return undefined;
+  const values = Object.fromEntries(header.split(';').map(part => {
+    const separator = part.indexOf('=');
+    return separator < 0 ? ['', ''] : [part.slice(0, separator).trim(), part.slice(separator + 1).trim()];
+  }).filter(([key]) => key));
+  return Object.keys(values).length ? values : undefined;
 }
 
 async function errorFromResponse(response: Response): Promise<ScreenshotError> {
@@ -64,7 +75,7 @@ export function useScreenshot() {
     setCancelled(false);
     setElapsedSeconds(0);
     setLoading(true);
-    const timeout = window.setTimeout(() => abortController.abort('CLIENT_TIMEOUT'), 55000);
+    const timeout = window.setTimeout(() => abortController.abort('CLIENT_TIMEOUT'), 118000);
 
     try {
       const response = await fetch('/api/screenshot', {
@@ -86,6 +97,7 @@ export function useScreenshot() {
         durationMs: performance.now() - started,
         notes: readNotes(response.headers.get('X-Screenshot-Notes')),
         mimeType,
+        captureDetails: readTiming(response.headers.get('X-Screenshot-Timing')),
       });
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError' || abortController.signal.aborted) {
@@ -107,5 +119,9 @@ export function useScreenshot() {
     if (lastOptions.current) void run(lastOptions.current);
   }, [run]);
 
-  return {result, error, loading, elapsedSeconds, cancelled, run, cancel, retry};
+  const retryWithMoreTime = useCallback(() => {
+    if (lastOptions.current) void run({ ...lastOptions.current, maxSeconds: 120, delay: Math.max(lastOptions.current.delay, 5), popupWait: Math.max(lastOptions.current.popupWait || 0, 10) });
+  }, [run]);
+
+  return {result, error, loading, elapsedSeconds, cancelled, run, cancel, retry, retryWithMoreTime};
 }

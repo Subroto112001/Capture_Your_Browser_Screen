@@ -12,6 +12,8 @@ export interface CaptureOptions {
   platform: SitePlatform;
   hideWixBanner: boolean;
   forceReveal: boolean;
+  blockTrackers: boolean;
+  maxSeconds: 'auto' | 60 | 90 | 120;
   popupWait?: number;
 }
 
@@ -20,6 +22,7 @@ export interface ScreenshotNotes {
   hidden?: number;
   platform?: 'wix' | 'generic';
   truncated?: boolean;
+  degraded?: string[];
 }
 
 export interface ScreenshotResult {
@@ -31,6 +34,7 @@ export interface ScreenshotResult {
   notes: ScreenshotNotes;
   mimeType: string;
   dimensions?: { width: number; height: number };
+  captureDetails?: Record<string, string>;
 }
 
 export interface ScreenshotError {

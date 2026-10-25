@@ -24,7 +24,7 @@ function LoadingPanel({elapsedSeconds, onCancel}: {elapsedSeconds: number; onCan
     <div className="loading-panel-copy">
       <span className="loading-orbit" aria-hidden="true" />
       <div><h2>Preparing your screenshot</h2><p>{statusLines[statusIndex]} <span>{elapsedSeconds}s</span></p>
-        <small>Full-page Wix captures can take up to about 40 seconds.</small></div>
+        <small>Long full-page Wix captures can take up to about 2 minutes.</small></div>
       <button className="cancel-capture" type="button" onClick={onCancel}><X size={16} /> Cancel</button>
     </div>
     <div className="skeleton-browser" aria-hidden="true"><div className="skeleton-browser-bar"><i /><i /><i /><span /></div><div className="skeleton-shimmer" /></div>
@@ -42,6 +42,8 @@ export default function App() {
   const [platform, setPlatform] = useState<SitePlatform>('auto');
   const [hideWixBanner, setHideWixBanner] = useState(false);
   const [forceReveal, setForceReveal] = useState(false);
+  const [blockTrackers, setBlockTrackers] = useState(true);
+  const [maxSeconds, setMaxSeconds] = useState<'auto' | 60 | 90 | 120>('auto');
   const [formError, setFormError] = useState('');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [retryRemaining, setRetryRemaining] = useState(0);
@@ -87,6 +89,8 @@ export default function App() {
       platform,
       hideWixBanner,
       forceReveal,
+      blockTrackers,
+      maxSeconds,
       ...(popupWait === '' ? {} : {popupWait: Number(popupWait)}),
     };
     void screenshot.run(options);
@@ -140,7 +144,7 @@ export default function App() {
           <div className="select-card option-popup-wait"><label className="select-label" htmlFor="popup-wait">Popup wait</label><select id="popup-wait" value={popupWait} onChange={event => setPopupWait(event.target.value)}><option value="">Auto (3s general · 6s Wix)</option><option value="0">0 seconds</option><option value="3">3 seconds</option><option value="6">6 seconds</option><option value="10">10 seconds</option></select><span className="field-help">Time to catch delayed overlays.</span></div>
           <div className="select-card option-platform"><label className="select-label" htmlFor="platform-select">Site type</label><select id="platform-select" value={platform} onChange={event => setPlatform(event.target.value as SitePlatform)}><option value="auto">Auto detect</option><option value="wix">Wix</option><option value="generic">Generic</option></select><span className="field-help">Choose the page loading profile.</span></div>
         </div>
-        <details className="advanced-options"><summary>Advanced options</summary><div className="advanced-controls"><label><input type="checkbox" checked={hideWixBanner} onChange={event => setHideWixBanner(event.target.checked)} /> Hide Wix free-plan banner</label><label><input type="checkbox" checked={forceReveal} onChange={event => setForceReveal(event.target.checked)} /> Force reveal hidden sections <span className="experimental-label">Experimental</span></label></div></details>
+        <details className="advanced-options"><summary>Advanced options</summary><div className="advanced-controls"><label><input type="checkbox" checked={hideWixBanner} onChange={event => setHideWixBanner(event.target.checked)} /> Hide Wix free-plan banner</label><label><input type="checkbox" checked={forceReveal} onChange={event => setForceReveal(event.target.checked)} /> Force reveal hidden sections <span className="experimental-label">Experimental</span></label><label><input type="checkbox" checked={blockTrackers} onChange={event => setBlockTrackers(event.target.checked)} /> Block common analytics trackers <span className="toggle-subtext">Visual assets and consent scripts remain allowed.</span></label><label className="advanced-time-limit"><span>Capture time limit<select value={maxSeconds} onChange={event => setMaxSeconds(event.target.value === 'auto' ? 'auto' : Number(event.target.value) as 60 | 90 | 120)}><option value="auto">Auto</option><option value="60">60 seconds</option><option value="90">90 seconds</option><option value="120">120 seconds</option></select><small>Server limits may clamp this value.</small></span></label></div></details>
 
         {formError && <p className="form-error" role="alert">{formError}</p>}
         <div className="action-bar">
@@ -155,7 +159,7 @@ export default function App() {
     {screenshot.cancelled && <p className="cancelled-note" role="status"><Check size={16} /> Capture canceled.</p>}
     {screenshot.loading && <LoadingPanel elapsedSeconds={screenshot.elapsedSeconds} onCancel={screenshot.cancel} />}
     {screenshot.error && <section className="error-card error-card-react" role="alert"><div><strong>{screenshot.error.status === 429 ? 'Rate limit reached' : screenshot.error.status === 413 ? 'Screenshot too large' : screenshot.error.status === 504 ? 'Capture timed out' : 'Capture failed'}</strong><p>{screenshot.error.message}</p>{retryRemaining > 0 && <p className="retry-countdown">Try again in {retryRemaining}s</p>}</div><button type="button" className="retry-button" onClick={screenshot.retry}>Retry</button></section>}
-    {screenshot.result && <div className="result-container" ref={resultAnchor}><ResultPanel result={screenshot.result} onToast={toast} /></div>}
+    {screenshot.result && <div className="result-container" ref={resultAnchor}><ResultPanel result={screenshot.result} onToast={toast} onRetryLonger={screenshot.retryWithMoreTime} /></div>}
 
     <SiteFooter />
     <StatusToasts items={toasts} onDismiss={dismissToast} />
