@@ -49,7 +49,10 @@ function PreviewTile({bitmap, sourceY, pixelHeight, cssHeight, pixelWidth, displ
     const observer = new IntersectionObserver(entries => {
       if (entries.some(entry => entry.isIntersecting)) {
         paint();
-        observer.disconnect();
+      } else if (painted && canvasRef.current) {
+        canvasRef.current.width = 0;
+        canvasRef.current.height = 0;
+        painted = false;
       }
     }, {root, rootMargin: '600px 0px'});
     observer.observe(wrapper);
@@ -100,7 +103,8 @@ export function PreviewViewer({blob, objectUrl, device, alt, onOpen, onDimension
         setNaturalDimensions({width: naturalWidth, height: naturalHeight});
         onDimensions(naturalWidth, naturalHeight);
         const desiredWidth = zoomPreset === 'fit' ? Math.min(availableWidth, naturalWidth) : Math.min(naturalWidth, naturalWidth * zoom);
-        const pixelRatio = Math.min(window.devicePixelRatio || 1, naturalWidth / desiredWidth);
+        const pixelCap = window.innerWidth < 820 ? 1600 : 4096;
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, naturalWidth / desiredWidth, pixelCap / desiredWidth);
         const resizedWidth = Math.max(1, Math.min(naturalWidth, Math.round(desiredWidth * pixelRatio)));
         const resizedHeight = Math.max(1, Math.round(resizedWidth * naturalHeight / naturalWidth));
         resizedBitmap = await createImageBitmap(sourceBitmap, {resizeWidth: resizedWidth, resizeHeight: resizedHeight, resizeQuality: 'high'});

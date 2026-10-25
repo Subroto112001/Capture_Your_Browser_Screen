@@ -19,7 +19,7 @@ A fast, lightweight, and production-ready on-demand website screenshot service d
 ├── lib/                   # Browser, secure URL checks, capture pipeline, and rate limiting
 ├── src/                   # React UI, tiled preview, lightbox, and screenshot state hook
 ├── index.html             # Vite entry and author metadata
-├── vercel.json            # Function duration, memory, and CSP headers
+├── vercel.json            # Function duration, bundled browser, and CSP headers
 └── package.json           # App scripts and dependencies
 ```
 
@@ -28,7 +28,7 @@ A fast, lightweight, and production-ready on-demand website screenshot service d
 ## 2. Local Setup & Development
 
 ### Prerequisites
-- Node.js 20.x or higher
+- Node.js 24.x (the configured Vercel runtime)
 - Google Chrome or Chromium installed on your local machine (macOS/Windows)
 
 ### Installation
@@ -94,7 +94,9 @@ On macOS/Linux, run `cp .env.example .env`, then `npm install` and `npm run dev`
 
 ## 3. Deploying to Vercel (Free Hobby Plan)
 
-Vercel selects its bundled Linux Chromium automatically. Do not configure `CHROME_PATH` in Vercel project environment variables. The function has a 60-second maximum duration and 1024 MB memory configured in `vercel.json`.
+Vercel selects the bundled Linux Chromium automatically. The project pins compatible Chromium/Puppeteer versions and uses Node.js 24.x. Do not set `CHROME_PATH` or `ALLOW_LOCAL_URLS` in Vercel project environment variables. For troubleshooting, you can temporarily set `SCREENSHOT_DEBUG=1` to include the launch error message in a 500 response; remove it after debugging. The function has a 60-second maximum duration configured in `vercel.json`.
+
+If Vercel's runtime detection needs an override, set `AWS_LAMBDA_JS_RUNTIME=nodejs24.x` in the project's environment variables. Leave `AWS_EXECUTION_ENV` unset so the function can provide its matching Lambda runtime marker automatically.
 
 ### Option A: Via GitHub (Recommended)
 1. Push your repository to GitHub.

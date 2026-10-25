@@ -103,7 +103,7 @@ export function ResultPanel({result, onToast}: ResultPanelProps) {
           <div className="result-panel-heading">
             <div className="result-title-line"><span className="result-heading-icon"><Globe2 size={18} /></span><h2 id="result-title">Captured Screenshot</h2></div>
             <div className="result-chips" aria-label="Screenshot details">
-              <span className="result-chip"><Globe2 size={14} />{getHostname(result.url)}</span>
+              <span className="result-chip"><Globe2 size={14} /><span className="result-hostname">{getHostname(result.url)}</span></span>
               <span className="result-chip">{dimensions ? `${dimensions.width} × ${dimensions.height} px` : 'Reading image dimensions…'}</span>
               <span className="result-chip">{formatBytes(result.blob.size)}</span>
               <span className="result-chip">{result.mimeType.replace('image/', '').toUpperCase()}</span>
@@ -137,6 +137,9 @@ export function ResultPanel({result, onToast}: ResultPanelProps) {
           {result.device === 'mobile' && <div className="phone-home-indicator" aria-hidden="true" />}
         </div>
 
+        <button className="mobile-open-fullsize" type="button" onClick={event => openLightbox(event.currentTarget)} disabled={!dimensions}>
+          <Expand size={17} aria-hidden="true" /> Open full size
+        </button>
         <div className="result-viewer-footer">
           <p>Scroll to inspect the full page. Open full size for detailed zoom and panning.</p>
         </div>

@@ -179,7 +179,8 @@ export default async function handler(req, res) {
     if (watchdog) clearTimeout(watchdog);
     const statusCode = error.statusCode || 500;
     console.error(`[Screenshot Error ${statusCode}]`, error.message);
-    return res.status(statusCode).json({ error: statusCode === 500 ? 'An unexpected error occurred while capturing the website screenshot.' : error.message });
+    const debugMessage = statusCode === 500 && process.env.SCREENSHOT_DEBUG === '1' ? error.message : null;
+    return res.status(statusCode).json({ error: statusCode === 500 ? 'An unexpected error occurred while capturing the website screenshot.' : error.message, ...(debugMessage ? { debug: debugMessage } : {}) });
   } finally {
     if (browser) try { await browser.close(); } catch (error) { console.error('[screenshot] browser close failed:', error.message); }
   }
